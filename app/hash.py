@@ -4,8 +4,6 @@ import os
 from app.filehandling import get_file_dir_list
 
 def hash_file(filepath: str) -> str:
-    print(filepath)
-    print(os.path.isfile(filepath))
     hash = hashlib.md5()
     try:
         with open(filepath, "rb") as FILE:
