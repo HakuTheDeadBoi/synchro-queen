@@ -47,3 +47,4 @@ def compare_folders(source_root: str, replica_root: str, fast_comparison: bool) 
             changes[folder] = "folder deleted"
 
     return changes
+

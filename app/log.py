@@ -6,7 +6,7 @@ def configure_logging(logfile):
     logger.setLevel(logging.INFO)  # Set the overall logging level
 
     # Create handlers
-    file_handler = logging.FileHandler(logfile)  # Logs to file
+    file_handler = logging.FileHandler(logfile, encoding="utf-8")  # Logs to file
     console_handler = logging.StreamHandler()    # Logs to console
 
     # Create a formatter and set it for both handlers

@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import shutil
 
 def get_file_dir_list(root: str) -> tuple[list[str], list[str]]:
@@ -18,17 +19,25 @@ def get_file_dir_list(root: str) -> tuple[list[str], list[str]]:
             else:
                 filepaths.append(full_path)
     except IOError as e:
-        raise IOError from e
+        raise IOError(e) from e
 
     return filepaths, dirpaths
+
+def post_delete_check(path: str, source_root: str, replica_root: str) -> None:
+    parent_folder = str(pathlib.Path(path).parent)
+    if not os.listdir(parent_folder):
+        if not os.path.exists(parent_folder.replace(replica_root, source_root)):
+            logging.info(f"{parent_folder} -> folder deleted")
+            os.rmdir(parent_folder)
+            post_delete_check(parent_folder, source_root, replica_root)
 
 def push_changes(changes: dict[str, str], source_root: str, replica_root: str) -> None:
     action = {
         "added": lambda path: (os.makedirs(os.path.dirname(path.replace(source_root, replica_root)), exist_ok=True), shutil.copy2(path, path.replace(source_root, replica_root))),
-        "deleted": lambda path: os.remove(path),
+        "deleted": lambda path: (os.remove(path), post_delete_check(path, source_root, replica_root)),
         "changed": lambda path: shutil.copy2(path, path.replace(source_root, replica_root)),
         "folder added": lambda path: shutil.copytree(path, path.replace(source_root, replica_root)),
-        "folder deleted": lambda path: os.rmdir(path)
+        "folder deleted": lambda path: (os.rmdir(path), post_delete_check(path, source_root, replica_root))
     }
 
     for path, change in changes.items():
