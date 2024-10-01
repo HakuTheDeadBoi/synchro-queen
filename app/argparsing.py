@@ -37,15 +37,30 @@ def validate_args(args: argparse.Namespace) -> tuple[bool, str]:
     is_everything_valid = True
     final_message = ""
 
+    # invalid source is fatal
     is_source_valid, msg = validate_folder(args.source)
     is_everything_valid = is_everything_valid and is_source_valid
     final_message += msg
 
+    # if replica is invalid, we can try to create one
     is_replica_valid, msg = validate_folder(args.replica)
+    if not is_replica_valid:
+        try:
+            os.makedirs(args.replica)
+            is_replica_valid, msg = validate_folder(args.replica)
+        except IOError:
+            pass
     is_everything_valid = is_everything_valid and is_replica_valid
     final_message += msg
 
+    # logfile is the same case as replica
     is_logfile_valid, msg = validate_file(args.logfile)
+    if not is_logfile_valid:
+        try:
+            open(args.logfile, "w").close()
+            is_logfile_valid, msg = validate_file(args.logfile)
+        except IOError:
+            pass
     is_everything_valid = is_everything_valid and is_logfile_valid
     final_message += msg
 
